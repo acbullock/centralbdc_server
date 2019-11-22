@@ -9,7 +9,7 @@ const bodyParser = require('body-parser')
 
 // in sublime
 var express = require("express");
-var port = process.env.PORT || 3001;
+var port = process.env.PORT || 3000;
 var cors = require('cors');
 var app = express();
 // app.use(express.json()) 
