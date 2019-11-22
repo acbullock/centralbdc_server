@@ -1,6 +1,6 @@
 
 const MongoClient = require('mongodb').MongoClient;
-const uri = "mongodb+srv://lexliveslife:F%40ceb00k%21@centralbdc-im3cl.mongodb.net/test?retryWrites=true&w=majority";
+const uri = process.env.MONGODB_URI;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 client.connect()
 const bodyParser = require('body-parser')
@@ -9,7 +9,7 @@ const bodyParser = require('body-parser')
 
 // in sublime
 var express = require("express");
-var port = process.env.PORT || 3000;
+var port = process.env.PORT || 3001;
 var cors = require('cors');
 var app = express();
 // app.use(express.json()) 
@@ -68,5 +68,5 @@ app.post('/insertOne', async function (req, res){
     res.send(collection)
 })
 app.listen(port, function () {
-    console.log(`Example app listening on port !`);
+    console.log(`Example app listening on port ${port}!`);
 });
