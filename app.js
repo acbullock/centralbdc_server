@@ -68,11 +68,18 @@ app.post('/insertOne', async function (req, res){
     collection = await collection.insertOne(req.body.item)
     res.send(collection)
 })
-app.post('/sendGroupText', async function(req, res){
-    let {fromNumber} = req.query
-    let {toNumber, text} = req.body
+
+app.post('/getToken', async function(req, res){
     let token = await axios.post("https://webhooks.mongodb-stitch.com/api/client/v2.0/app/centralbdc-bwpmi/service/RingCentral/incoming_webhook/gettoken")
     token = token.data
+    res.send(token)
+
+
+})
+
+app.post('/sendGroupText', async function(req, res){
+    let {fromNumber, token} = req.query
+    let {toNumber, text} = req.body
     let result = await axios.post(`https://webhooks.mongodb-stitch.com/api/client/v2.0/app/centralbdc-bwpmi/service/RingCentral/incoming_webhook/grouptext?fromNumber=${fromNumber}&token=${token}`,
     {
         text,
