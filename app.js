@@ -1,11 +1,12 @@
 
 const MongoClient = require('mongodb').MongoClient;
-const uri = process.env.MONGODB_URI;
+const uri = process.env.MONGODB_URI
+// const uri = "mongodb+srv://lexliveslife:F%40ceb00k%21@centralbdc-im3cl.mongodb.net/test?retryWrites=true";
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 client.connect()
 const bodyParser = require('body-parser')
 
-
+const axios = require("axios")
 
 // in sublime
 var express = require("express");
@@ -66,6 +67,19 @@ app.post('/insertOne', async function (req, res){
     let collection = await client.db("CentralBDC").collection(req.body.collection);
     collection = await collection.insertOne(req.body.item)
     res.send(collection)
+})
+app.post('/sendGroupText', async function(req, res){
+    let {fromNumber} = req.query
+    let {toNumber, text} = req.body
+    let token = await axios.post("https://webhooks.mongodb-stitch.com/api/client/v2.0/app/centralbdc-bwpmi/service/RingCentral/incoming_webhook/gettoken")
+    token = token.data
+    let result = await axios.post(`https://webhooks.mongodb-stitch.com/api/client/v2.0/app/centralbdc-bwpmi/service/RingCentral/incoming_webhook/grouptext?fromNumber=${fromNumber}&token=${token}`,
+    {
+        text,
+        toNumber
+    })
+    res.send(result.data)
+
 })
 app.listen(port, function () {
     console.log(`Example app listening on port ${port}!`);
