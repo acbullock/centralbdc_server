@@ -83,12 +83,11 @@ app.post('/getToken', async function (req, res) {
 })
 
 app.post('/sendGroupText', async function (req, res) {
-    let { fromNumber, token } = req.query
-    let { toNumber, text } = req.body
-    let result = await axios.post(`https://webhooks.mongodb-stitch.com/api/client/v2.0/app/centralbdc-bwpmi/service/RingCentral/incoming_webhook/grouptext?fromNumber=${fromNumber}&token=${token}`,
+    let { toNumber, fromNumber, token } = req.query
+    let { text } = req.body
+    let result = await axios.post(`https://webhooks.mongodb-stitch.com/api/client/v2.0/app/centralbdc-bwpmi/service/RingCentral/incoming_webhook/sendsms?toNumber=${toNumber}&fromNumber=${fromNumber}&token=${token}`,
         {
-            text,
-            toNumber
+            text
         })
     res.send(result.data)
 
