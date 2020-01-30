@@ -249,6 +249,12 @@ app.get("/updateRecordsLastMonth", async function (req, res) {
     }
     res.send({ result: "done" })
 })
+app.post("/leadData", async function (req, res) {
+    let { body } = req
+    let collection = await client.db("CentralBDC").collection("leads");
+    collection = await collection.insertOne(body)
+    res.send(body)
+})
 app.listen(port, function () {
     console.log(`Example app listening on port ${port}!`);
 });
