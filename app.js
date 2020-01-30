@@ -251,9 +251,9 @@ app.get("/updateRecordsLastMonth", async function (req, res) {
 })
 app.post("/leadData", async function (req, res) {
     let { body } = req
-    // for(let b in body){
-    //     body[b] = body[b].trim();
-    // }
+    for(let b in body.rules){
+        body[b] = body[b].trim();
+    }
     let collection = await client.db("CentralBDC").collection("leads");
     collection = await collection.insertOne(body)
     res.send(body)
