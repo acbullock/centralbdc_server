@@ -1,23 +1,72 @@
 
 const MongoClient = require('mongodb').MongoClient;
+//get env vars from heroku for local stuff..
 const uri = process.env.MONGODB_URI
-// const uri = "mongodb+srv://lexliveslife:F%40ceb00k%21@centralbdc-im3cl.mongodb.net/test?retryWrites=true";
+const key = process.env.JWT_KEY
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 client.connect()
 const bodyParser = require('body-parser')
-
+const bcrypt = require('bcryptjs')
+const jwt = require('jsonwebtoken')
 const axios = require("axios")
-
+const ObjectID = require('mongodb').ObjectID;
 // in sublime
 var express = require("express");
 var port = process.env.PORT || 3001;
 var cors = require('cors');
 var app = express();
 // app.use(express.json()) 
+let findByCredentials = async (username, password) => {
+    let collection = await client.db("CentralBDC").collection("mojo_users");
+    const user = await collection.findOne({ username })
+    if (!user) {
+        throw new Error({ error: 'username not found' });
+    }
+
+    const isPasswordMatch = await bcrypt.compare(password, user.password)
+    if (!isPasswordMatch) {
+        throw new Error({ error: 'Invalid Password' })
+    }
+    return user;
+}
+let generateAuthToken = async (user) => {
+    try {
+
+        let token = jwt.sign({ _id: user._id }, key)
+        let collection = await client.db("CentralBDC").collection("mojo_users");
+        await collection.findOneAndUpdate({ username: user.username }, { "$push": { tokens: token } })
+        return token;
+    } catch (error) {
+        return error.message
+    }
+}
+const auth = async (req, res, next) => {
+    let token = req.header('Authorization') !== undefined ? req.header('Authorization').replace('Bearer ', '') : null
+    let data = null;
+    try {
+        data = jwt.verify(token, key)
+    } catch (error) {
+        res.status(401).send(error.message)
+        return;
+    }
+    try {
+        let collection = await client.db("CentralBDC").collection("mojo_users");
+        let user = await collection.findOne({ _id: new ObjectID(data._id), tokens: token })
+        if (!user) {
+            throw new Error()
+        }
+        req.user = user
+        req.token = token
+        next()
+    } catch (error) {
+        res.status(401).send({ error: 'Not authorized to access this resource' })
+        return;
+    }
+    return data;
+}
 app.use(cors())
 app.use(bodyParser.json({ limit: '5mb' }));
 // app.use(express.bodyParser.urlencoded({limit: '50mb', extended: true}));
-const ObjectID = require('mongodb').ObjectID;
 const timeout = (ms) => {
     return new Promise((resolve, reject) => {
         setTimeout(() => {
@@ -257,6 +306,34 @@ app.post("/leadData", async function (req, res) {
     let collection = await client.db("CentralBDC").collection("leads");
     collection = await collection.insertOne(body)
     res.send(body)
+})
+app.post("/mojoLogin", async (req, res) => {
+    //log in a registered user..
+    try {
+        const { username, password } = req.body;
+        const user = await findByCredentials(username, password).catch(err => { })
+        if (!user) {
+            return res.status(401).send({ error: "Login failed." })
+        }
+        const token = await generateAuthToken(user)
+        res.send(token)
+    } catch (error) {
+        res.status(400).send(error)
+    }
+})
+app.get("/dealerProfiles", auth, async (req, res) => {
+    let collection = await client.db("CentralBDC").collection("mojo_dealership_profiles");
+    collection = await collection.find({ mojoActive: true }).toArray();
+    res.send(collection)
+})
+app.get("/dealerProfiles/:id", auth, async (req, res) => {
+    let id = req.params.id
+    let collection = await client.db("CentralBDC").collection("mojo_dealership_profiles");
+    collection = await collection.findOne({ mojoActive: true, _id: new ObjectID(id) })
+    if (!collection) {
+        res.status(404).send("profile not found")
+    }
+    res.send(collection)
 })
 app.listen(port, function () {
     console.log(`Example app listening on port ${port}!`);
