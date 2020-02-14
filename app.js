@@ -115,7 +115,12 @@ app.post('/find', async function (req, res) {
     collection = await collection.find(query).toArray()
     res.send(collection)
 })
-
+app.post('/count', async function (req, res) {
+    let query = req.body.query || {}
+    let collection = await client.db("CentralBDC").collection(req.body.collection);
+    let count = await collection.countDocuments(query)
+    res.send({count})
+})
 app.post('/insertOne', async function (req, res) {
 
     let collection = await client.db("CentralBDC").collection(req.body.collection);
