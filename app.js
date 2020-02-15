@@ -110,9 +110,9 @@ app.post('/findOneAndDelete', async function (req, res) {
 })
 app.post('/find', async function (req, res) {
     let query = req.body.query || {}
-
+    let options = req.body.options || {}
     let collection = await client.db("CentralBDC").collection(req.body.collection);
-    collection = await collection.find(query).toArray()
+    collection = await collection.find(query, options).toArray()
     res.send(collection)
 })
 app.post('/count', async function (req, res) {
