@@ -119,15 +119,34 @@ app.post('/count', async function (req, res) {
     let query = req.body.query || {}
     let collection = await client.db("CentralBDC").collection(req.body.collection);
     let count = await collection.countDocuments(query)
-    res.send({count})
+    res.send({ count })
 })
 app.post('/insertOne', async function (req, res) {
 
     let collection = await client.db("CentralBDC").collection(req.body.collection);
-    collection = await collection.insertOne(req.body.item)
+    try {
+        collection = await collection.insertOne(req.body.item)
+    } catch (error) {
+        res.status(400).send({ error: error.errmsg })
+        return;
+    }
+
     res.send(collection)
 })
-
+app.post('/aggregate', async function (req, res) {
+    let pipeline = req.body.pipeline || {}
+    let options = req.body.options || {}
+    let coll = req.body.collection
+    let collection = await client.db("CentralBDC").collection(coll);
+    try {
+        collection = await collection.aggregate(pipeline, options).toArray()
+    } catch (error) {
+        // res.status(400).send(error.errmsg)
+        res.status(400).send({ error: error.errmsg })
+        return;
+    }
+    res.send(collection)
+})
 app.post('/getToken', async function (req, res) {
     let token = await axios.post("https://webhooks.mongodb-stitch.com/api/client/v2.0/app/centralbdc-bwpmi/service/RingCentral/incoming_webhook/gettoken")
     token = token.data
