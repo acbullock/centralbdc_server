@@ -75,12 +75,13 @@ const timeout = (ms) => {
     })
 }
 app.post('/findOne', async function (req, res) {
-    let query = req.body.query
+    let query = req.body.query || {}
+    let options = req.body.options || {}
     if (query._id != undefined) {
         query._id = new ObjectID(query._id)
     }
     let collection = await client.db("CentralBDC").collection(req.body.collection);
-    collection = await collection.findOne(query).catch((err) => console.log(err))
+    collection = await collection.findOne(query, options).catch((err) => console.log(err))
     res.send(collection);
 });
 
