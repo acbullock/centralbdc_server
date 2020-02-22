@@ -360,6 +360,61 @@ app.get("/dealerProfiles/:id", auth, async (req, res) => {
     }
     res.send(collection)
 })
+app.post("/engagedLead", auth, async (req, res) => {
+    let { body } = req;
+    let user_profile_id = body.user_profile_id || {}
+    let origin = body.origin || {}
+
+    let first_name = body.first_name || ""
+    let last_name = body.last_name || ""
+    let phone_number = body.phone_number || ""
+    let email = body.email || ""
+    let postal_code = body.postal_code || ""
+    let financing = body.financing || {}
+
+    let vehicle = body.vehicle || {}
+
+    let trade_in_vehicle = body.trade_in_vehicle || {}
+
+    let contact_preference = body.contact_preference || ""
+    let contact_time_preference = body.contact_time_preference || ""
+    let adf_prospect_comments = body.adf_prospect_comments
+    let user_info = body.user_info || {}
+    let experiment = body.experiment || {}
+    let dealership_id = body.dealership_id || ""
+    let transcript = body.transcript || ""
+    let mojo_score = body.mojo_score || -1
+    let record = {
+        user_profile_id,
+        origin,
+        first_name,
+        last_name,
+        phone_number,
+        email,
+        postal_code,
+        financing,
+        vehicle,
+        trade_in_vehicle,
+        adf_prospect_comments,
+        contact_preference,
+        contact_time_preference,
+        user_info,
+        experiment,
+        dealership_id,
+        transcript,
+        mojo_score
+    }
+    let collection = await client.db("CentralBDC").collection("mojo_leads");
+    try {
+        collection.insertOne(record)
+    } catch (error) {
+        res.status(400).send(err)
+        return;
+    }
+
+    res.send(record)
+
+})
 app.listen(port, function () {
     console.log(`Example app listening on port ${port}!`);
 });
