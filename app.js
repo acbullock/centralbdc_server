@@ -385,7 +385,8 @@ app.post("/engagedLead", auth, async (req, res) => {
     let transcript = body.transcript || ""
     let mojo_score = body.mojo_score || -1
     let recommended_action = body.recommended_action || ""
-    let is_test = body.is_test || true
+    let is_test = body.is_test
+    if (is_test === undefined) { is_test = true }
     let record = {
         user_profile_id,
         origin,
