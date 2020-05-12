@@ -385,7 +385,7 @@ app.post("/engagedLead", auth, async (req, res) => {
     let transcript = body.transcript || ""
     let mojo_score = body.mojo_score || -1
     let recommended_action = body.recommended_action || ""
-    let isTest = body.isTest || true
+    let is_test = body.isTest || true
     let record = {
         user_profile_id,
         origin,
@@ -406,7 +406,7 @@ app.post("/engagedLead", auth, async (req, res) => {
         transcript,
         mojo_score,
         recommended_action,
-        isTest
+        is_test
     }
     let collection = await client.db("CentralBDC").collection("mojo_leads");
     try {
