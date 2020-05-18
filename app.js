@@ -462,7 +462,7 @@ app.post("/adfToMojo", async (req, res) => {
     let { _id, rules } = req.body
     let adf = rules.adf
     //accepts leads, and converts to mojo request
-    parseString(adf, function (err, result) {
+    let x = await parseString(adf, function (err, result) {
         let mojo_request = {
             user_profile_id: _id
         }
@@ -482,8 +482,9 @@ app.post("/adfToMojo", async (req, res) => {
         if (!vehicle) {
             console.log("no vehicle in prospect")
         }
-        res.send(mojo_request)
+
     })
+    res.send(x)
 })
 
 
