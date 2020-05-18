@@ -459,7 +459,8 @@ app.post("/engagedLead", auth, async (req, res) => {
 
 })
 app.post("/adfToMojo", async (req, res) => {
-    let { _id, adf } = req.body
+    let { _id, rules } = req.body
+    let adf = rules.adf
     //accepts leads, and converts to mojo request
     parseString(adf, function (err, result) {
         let mojo_request = {
