@@ -462,30 +462,29 @@ app.post("/adfToMojo", async (req, res) => {
     let { _id, rules } = req.body
     let adf = rules.adf
     //accepts leads, and converts to mojo request
-    let x = await parseStringPromise(adf, function (err, result) {
-        let mojo_request = {
-            user_profile_id: _id
-        }
-        let adf = result.adf
-        if (!adf) {
-            console.log("no adf in xml")
-            return
-        }
-        let prospect = getValue(adf.prospect)
-        if (!prospect) {
-            console.log("no prospect in adf")
-            return
-        }
-        let vehicle = getValue(prospect.vehicle)
-        let customer = getValue(prospect.customer)
-        let provider = getValue(prospect.provider)
-        if (!vehicle) {
-            console.log("no vehicle in prospect")
-        }
-
-        return mojo_request
+    let result = await parseStringPromise(adf, function (err, result) {
     })
-    res.send(x)
+    let mojo_request = {
+        user_profile_id: _id
+    }
+    let adf = result.adf
+    if (!adf) {
+        console.log("no adf in xml")
+        return
+    }
+    let prospect = getValue(adf.prospect)
+    if (!prospect) {
+        console.log("no prospect in adf")
+        return
+    }
+    let vehicle = getValue(prospect.vehicle)
+    let customer = getValue(prospect.customer)
+    let provider = getValue(prospect.provider)
+    if (!vehicle) {
+        console.log("no vehicle in prospect")
+    }
+
+    res.send(mojo_request)
 
 })
 
