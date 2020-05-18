@@ -10,11 +10,49 @@ const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const axios = require("axios")
 const ObjectID = require('mongodb').ObjectID;
+var parseStringPromise = require('xml2js').parseStringPromise;
 // in sublime
 var express = require("express");
 var port = process.env.PORT || 3001;
 var cors = require('cors');
 var app = express();
+
+const getValue = (obj) => {
+
+    if (!obj) return ""
+    let value = ""
+    obj[0]._ ? value = obj[0]._ : value = obj[0]
+    return value;
+}
+const getName = (name) => {
+    if (!Array.isArray(name)) { return }
+    let first = ""
+    let last = ""
+    for (let i in name) {
+        if (name[i].$.part === "last") {
+            last = name[i]._
+        }
+        if (name[i].$.part === "first") {
+            first = name[i]._
+        }
+    }
+
+
+    return { first, last }
+}
+const getOptions = (options) => {
+    if (!Array.isArray(options)) {
+        return []
+    }
+    else {
+        let arr = []
+        for (let o in options) {
+            if (!options[o].optionname) continu
+            arr.push(options[o].optionname[0])
+        }
+        return arr
+    }
+}
 // app.use(express.json()) 
 let findByCredentials = async (username, password) => {
     let collection = await client.db("CentralBDC").collection("mojo_users");
@@ -418,6 +456,169 @@ app.post("/engagedLead", auth, async (req, res) => {
     }
 
     res.send(record)
+
+})
+app.post("/adfToMojo", async (req, res) => {
+    let { _id, rules } = req.body
+    let { adf } = rules
+    if (!_id || !adf) {
+        res.send({})
+    }
+    let result = await parseStringPromise(adf, function (err, result) { })
+    let mojo_request = {
+        user_profile_id: _id,
+    }
+    adf = result.adf
+    if (!adf) {
+        console.log("no adf in xml")
+        res.send({})
+    }
+    let prospect = getValue(adf.prospect)
+    if (!prospect) {
+        console.log("no prospect in adf")
+        res.send({})
+    }
+    let vehicle = getValue(prospect.vehicle)
+    let customer = getValue(prospect.customer)
+    let provider = getValue(prospect.provider)
+    if (!vehicle) {
+        console.log("no vehicle in prospect")
+    }
+    //see if trade in estimate..
+    if (vehicle.$ ? vehicle.$.interest === "trade-in" : false) {
+        console.log("TRADE")
+        let trade_in_vehicle = {}
+        let year = getValue(vehicle.year)
+        year !== "" ? trade_in_vehicle.year = year : trade_in_vehicle = trade_in_vehicle
+        let make = getValue(vehicle.make)
+        make !== "" ? trade_in_vehicle.make = make : trade_in_vehicle = trade_in_vehicle
+        let model = getValue(vehicle.model)
+        model !== "" ? trade_in_vehicle.model = model : trade_in_vehicle = trade_in_vehicle
+        let trim = getValue(vehicle.trim)
+        trim !== "" ? trade_in_vehicle.trim = trim : trade_in_vehicle = trade_in_vehicle
+        let vin = getValue(vehicle.vin)
+        trim !== "" ? trade_in_vehicle.trim = trim : trade_in_vehicle = trade_in_vehicle
+        let options = getOptions(vehicle.option)
+
+        let colorcombination = getValue(vehicle.colorcombination)
+        let interior_color = getValue(colorcombination.interiorcolor)
+        interior_color !== "" ? trade_in_vehicle.interior_color = interior_color : trade_in_vehicle = trade_in_vehicle
+        let exterior_color = getValue(colorcombination.exteriorcolor)
+        exterior_color !== "" ? trade_in_vehicle.exterior_color = exterior_color : trade_in_vehicle = trade_in_vehicle
+        // let trade_in_vehicle = {
+        //     vin,
+        //     model_year: year,
+        //     make,
+        //     model,
+        //     trim,
+        //     options,
+        //     exterior_color,
+        //     interior_color,
+        // }
+        mojo_request.trade_in_vehicle = trade_in_vehicle
+        console.log("!", trade_in_vehicle)
+    }
+    else {
+
+        let v = {}
+        //     let { year, make, model, trim, colorcombination } = vehicle
+        let year = getValue(vehicle.year)
+        year !== "" ? v.model_year = year : v = v
+        let make = getValue(vehicle.make)
+        make !== "" ? v.make = make : v = v
+        let model = getValue(vehicle.model)
+        model !== "" ? v.model = model : v = v
+        let trim = getValue(vehicle.trim)
+        trim !== "" ? v.trim = trim : v = v
+        let vin = getValue(vehicle.vin)
+        vin !== "" ? v.vin = vin : v = v
+        let stock_number = getValue(vehicle.stock)
+        stock_number !== "" ? v.stock_number = stock_number : v = v
+        let colorcombination = getValue(vehicle.colorcombination)
+        let interior_color = getValue(colorcombination.interiorcolor)
+        interior_color !== "" ? v.interior_color = interior_color : v = v
+        let exterior_color = getValue(colorcombination.exteriorcolor)
+        exterior_color !== "" ? v.exterior_color = exterior_color : v = v
+        let options = getOptions(vehicle.option)
+
+        let finance = getValue(vehicle.finance)
+        finance = finance.amount || []
+        let price = getValue(vehicle.price)
+        let index = finance.findIndex((a) => {
+            return a.$.type === "monthly"
+        })
+        let monthly = ""
+        if (index !== -1) {
+            monthly = finance[index]._
+        }
+        index = finance.findIndex((a) => {
+            return a.$.type === "downpayment"
+        })
+        let loan = ""
+        if (index !== -1) {
+            loan = price - finance[index]._
+        }
+        // let v = {
+        //     stock_number,
+        //     vin,
+        //     model_year: year,
+        //     make,
+        //     model,
+        //     trim,
+        //     options,
+        //     exterior_color: exterior_color,
+        //     interior_color: interior_color,
+        // }
+        Object.keys(v).length > 0 ? mojo_request.vehicle = v : mojo_request = mojo_request
+        mojo_request.financing = {
+            preferred_loan_amount: loan,
+            preferred_payment_amount: monthly
+        }
+        mojo_request.financing.preferred_loan_amount === "" ? delete mojo_request.financing.preferred_loan_amount : mojo_request = mojo_request
+        mojo_request.financing.preferred_payment_amount === "" ? delete mojo_request.financing.preferred_payment_amount : mojo_request = mojo_request
+        Object.keys(mojo_request.financing).length === 0 ? delete mojo_request.financing : mojo_request = mojo_request
+
+    }
+
+    if (!customer) {
+        console.log("no customer in prospect")
+    }
+    else {
+        let contact = getValue(customer.contact)
+        let comments = getValue(customer.comments)
+        if (!contact) {
+            console.log("no contact in prospect.customer")
+        }
+        else {
+            let email = getValue(contact.email)
+            let phone = getValue(contact.phone)
+            let address = getValue(contact.address)
+            let name = getName(contact.name)
+            let postal = getValue(address.postalcode)
+            typeof email === "string" ? mojo_request.email = email : mojo_request = mojo_request
+            mojo_request.phone_number = phone
+            typeof phone === "string" ? mojo_request.phone = phone : mojo_request = mojo_request
+            // mojo_request.email = "abullock@centralbdc.com"
+            // mojo_request.phone_number = "9548646379"
+            mojo_request.first_name = name.first
+            mojo_request.last_name = name.last
+            mojo_request.postal_code = postal
+            mojo_request.adf_prospect_comments = comments
+        }
+    }
+    if (!provider) {
+        console.log("no provider in prospect")
+
+    }
+    else {
+        let name = getValue(provider.name)
+        mojo_request.origin = {
+            vendor_id: name,
+            vendor_name: name
+        }
+    }
+    console.log(JSON.stringify(mojo_request))
+    res.send(mojo_request)
 
 })
 app.listen(port, function () {
