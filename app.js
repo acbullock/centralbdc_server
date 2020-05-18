@@ -13,6 +13,7 @@ const ObjectID = require('mongodb').ObjectID;
 // in sublime
 var express = require("express");
 var port = process.env.PORT || 3001;
+var parseString = require('xml2js').parseString;
 var cors = require('cors');
 var app = express();
 // app.use(express.json()) 
@@ -63,6 +64,43 @@ const auth = async (req, res, next) => {
         return;
     }
     return data;
+}
+
+const getValue = (obj) => {
+
+    if (!obj) return ""
+    let value = ""
+    obj[0]._ ? value = obj[0]._ : value = obj[0]
+    return value;
+}
+const getName = (name) => {
+    if (!Array.isArray(name)) { return }
+    let first = ""
+    let last = ""
+    for (let i in name) {
+        if (name[i].$.part === "last") {
+            last = name[i]._
+        }
+        if (name[i].$.part === "first") {
+            first = name[i]._
+        }
+    }
+
+
+    return { first, last }
+}
+const getOptions = (options) => {
+    if (!Array.isArray(options)) {
+        return []
+    }
+    else {
+        let arr = []
+        for (let o in options) {
+            if (!options[o].optionname) continu
+            arr.push(options[o].optionname[0])
+        }
+        return arr
+    }
 }
 app.use(cors())
 app.use(bodyParser.json({ limit: '5mb' }));
@@ -420,6 +458,35 @@ app.post("/engagedLead", auth, async (req, res) => {
     res.send(record)
 
 })
+app.post("/adfToMojo", async (req, res) => {
+    let { _id, adf } = req.body
+    //accepts leads, and converts to mojo request
+    parseString(adf, function (err, result) {
+        let mojo_request = {
+            user_profile_id: _id
+        }
+        let adf = result.adf
+        if (!adf) {
+            console.log("no adf in xml")
+            return
+        }
+        let prospect = getValue(adf.prospect)
+        if (!prospect) {
+            console.log("no prospect in adf")
+            return
+        }
+        let vehicle = getValue(prospect.vehicle)
+        let customer = getValue(prospect.customer)
+        let provider = getValue(prospect.provider)
+        if (!vehicle) {
+            console.log("no vehicle in prospect")
+        }
+        res.send(mojo_request)
+    })
+})
+
+
+
 app.listen(port, function () {
     console.log(`Example app listening on port ${port}!`);
 });
