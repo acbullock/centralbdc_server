@@ -1,7 +1,7 @@
 
 const MongoClient = require('mongodb').MongoClient;
 //get env vars from heroku for local stuff..
-const uri = process.env.MONGODB_URI
+const uri = "mongodb+srv://lexliveslife:F%40ceb00k%21@centralbdc-im3cl.mongodb.net/test?retryWrites=true"
 const key = process.env.JWT_KEY
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 client.connect()
@@ -621,12 +621,18 @@ app.post("/adfToMojo", async (req, res) => {
 app.post("/askMojo", async (req, res) => {
     let { body } = req
     let url = "https://api.mojoai.io/v1/ask-mojo"
-    let mojo = await axios.post(url, body, {
-        headers: {
-            Authorization: 'Basic Y2M3OWJhNjktNTFhZi00ZTY4LWI4MTYtNWY4YmM3ZDI0MDlkOjYzYTk3MTNmLTRlYjAtNDgyMC1iODY4LWNkZjNlMTVhYWMyZA=='
-        }
-    })
-    res.send(mojo.data)
+    let mojo = {}
+    try {
+        mojo = await axios.post(url, body, {
+            headers: {
+                Authorization: 'Basic Y2M3OWJhNjktNTFhZi00ZTY4LWI4MTYtNWY4YmM3ZDI0MDlkOjYzYTk3MTNmLTRlYjAtNDgyMC1iODY4LWNkZjNlMTVhYWMyZA=='
+            }
+        })
+        res.send(mojo.data)
+    } catch (error) {
+        res.send(error)
+    }
+
 })
 app.listen(port, function () {
     console.log(`Example app listening on port ${port}!`);
