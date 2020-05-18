@@ -482,6 +482,7 @@ app.post("/adfToMojo", async (req, res) => {
         if (!vehicle) {
             console.log("no vehicle in prospect")
         }
+        return mojo_request
 
     })
     res.send(x)
