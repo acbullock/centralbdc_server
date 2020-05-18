@@ -596,7 +596,6 @@ app.post("/adfToMojo", async (req, res) => {
             let name = getName(contact.name)
             let postal = getValue(address.postalcode)
             typeof email === "string" ? mojo_request.email = email : mojo_request = mojo_request
-            mojo_request.phone_number = phone
             typeof phone === "string" ? mojo_request.phone_number = phone : mojo_request = mojo_request
             mojo_request.first_name = name.first
             mojo_request.last_name = name.last
