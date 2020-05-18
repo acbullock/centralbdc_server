@@ -597,9 +597,7 @@ app.post("/adfToMojo", async (req, res) => {
             let postal = getValue(address.postalcode)
             typeof email === "string" ? mojo_request.email = email : mojo_request = mojo_request
             mojo_request.phone_number = phone
-            typeof phone === "string" ? mojo_request.phone = phone : mojo_request = mojo_request
-            // mojo_request.email = "abullock@centralbdc.com"
-            // mojo_request.phone_number = "9548646379"
+            typeof phone === "string" ? mojo_request.phone_number = phone : mojo_request = mojo_request
             mojo_request.first_name = name.first
             mojo_request.last_name = name.last
             mojo_request.postal_code = postal
@@ -620,6 +618,16 @@ app.post("/adfToMojo", async (req, res) => {
     console.log(JSON.stringify(mojo_request))
     res.send(mojo_request)
 
+})
+app.post("/askMojo", async (req, res) => {
+    let { body } = req
+    let url = "https://api.mojoai.io/v1/ask-mojo"
+    let mojo = await axios.post(url, body, {
+        headers: {
+            Authorization: 'Basic Y2M3OWJhNjktNTFhZi00ZTY4LWI4MTYtNWY4YmM3ZDI0MDlkOjYzYTk3MTNmLTRlYjAtNDgyMC1iODY4LWNkZjNlMTVhYWMyZA=='
+        }
+    })
+    res.send(mojo.data)
 })
 app.listen(port, function () {
     console.log(`Example app listening on port ${port}!`);
