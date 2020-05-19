@@ -19,7 +19,7 @@ var app = express();
 
 const getValue = (obj) => {
 
-    if (!obj) return ""
+    if (!obj || !obj[0]) return ""
     let value = ""
     obj[0]._ ? value = obj[0]._ : value = obj[0]
     return value;
@@ -464,7 +464,15 @@ app.post("/adfToMojo", async (req, res) => {
     if (!_id || !adf) {
         res.send({})
     }
-    let result = await parseStringPromise(adf, function (err, result) { })
+    let result = {}
+    try {
+        result = await parseStringPromise(adf, function (err, result) { })
+
+    } catch (error) {
+        console.log(error)
+        res.send(error)
+        return
+    }
     let mojo_request = {
         user_profile_id: _id,
     }
