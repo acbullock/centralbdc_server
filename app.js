@@ -431,7 +431,6 @@ app.post("/engagedLead", auth, async (req, res) => {
         first_name,
         last_name,
         phone_number,
-        email,
         postal_code,
         financing,
         vehicle,
@@ -446,6 +445,9 @@ app.post("/engagedLead", auth, async (req, res) => {
         mojo_score,
         recommended_action,
         is_test
+    }
+    if (email.length > 0) {
+        record.email = email
     }
     let collection = await client.db("CentralBDC").collection("mojo_leads");
     try {
