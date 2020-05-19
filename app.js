@@ -430,6 +430,7 @@ app.post("/engagedLead", auth, async (req, res) => {
         origin,
         first_name,
         last_name,
+        email,
         phone_number,
         postal_code,
         financing,
@@ -445,9 +446,6 @@ app.post("/engagedLead", auth, async (req, res) => {
         mojo_score,
         recommended_action,
         is_test
-    }
-    if (email.length > 0) {
-        record.email = email
     }
     let collection = await client.db("CentralBDC").collection("mojo_leads");
     try {
@@ -597,8 +595,8 @@ app.post("/adfToMojo", async (req, res) => {
             let address = getValue(contact.address)
             let name = getName(contact.name)
             let postal = getValue(address.postalcode)
-            typeof email === "string" ? mojo_request.email = email : mojo_request = mojo_request
-            typeof phone === "string" ? mojo_request.phone_number = phone : mojo_request = mojo_request
+            typeof email === "string" && email.length > 0 ? mojo_request.email = email : mojo_request = mojo_request
+            typeof phone === "string" && phone.length > 0 ? mojo_request.phone_number = phone : mojo_request = mojo_request
             mojo_request.first_name = name.first
             mojo_request.last_name = name.last
             mojo_request.postal_code = postal
