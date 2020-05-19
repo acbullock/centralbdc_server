@@ -1,7 +1,7 @@
 
 const MongoClient = require('mongodb').MongoClient;
 //get env vars from heroku for local stuff..
-const uri = "mongodb+srv://lexliveslife:F%40ceb00k%21@centralbdc-im3cl.mongodb.net/test?retryWrites=true"
+const uri = process.env.MONGODB_URI
 const key = process.env.JWT_KEY
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 client.connect()
