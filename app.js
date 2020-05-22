@@ -248,9 +248,13 @@ const sendToCrm = async (user_profile_id) => {
                     vendorname: dealership
                 },
                 provider: {
-                    name: "CentralBDC AiChat",
-                    service: "Engaged Online Shopper",
-                    url: "https://centralbdc.com"
+                    name: {
+                        '@part': "full",
+                        '#text': "TrueCar/American Express"
+                    },
+                    service: {
+                        '#text': "New TrueCar/American Express Auto Buying Customer Inquiry"
+                    }
                 }
             }
         },
