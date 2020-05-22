@@ -249,6 +249,7 @@ const sendToCrm = async (user_profile_id) => {
                 },
                 provider: {
                     name: "CentralBDC AiChat",
+                    service: "Engaged Online Shopper",
                     url: "https://centralbdc.com"
                 }
             }
