@@ -223,7 +223,7 @@ const sendToCrm = async (user_profile_id) => {
             prospect: {
                 '@status': 'new',
                 id: {
-                    '@source': "CentralBDC AiChat",
+                    '@source': "CentralBDC",
                     '#text': user_profile_id
                 },
                 requestdate: new Date().toISOString(),
@@ -249,10 +249,7 @@ const sendToCrm = async (user_profile_id) => {
                     vendorname: dealership
                 },
                 provider: {
-                    name: {
-                        '@part': "full",
-                        '#text': "CentralBDC AiChat"
-                    },
+                    name: "CentralBDC AiChat",
                     service: {
                         '#text': "Engaged Online Shopper"
                     }
