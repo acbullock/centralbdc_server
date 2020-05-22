@@ -12,6 +12,7 @@ const bodyParser = require('body-parser')
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const axios = require("axios")
+var builder = require('xmlbuilder');
 const ObjectID = require('mongodb').ObjectID;
 var parseStringPromise = require('xml2js').parseStringPromise;
 // in sublime
@@ -204,7 +205,11 @@ const sendToCrm = async (user_profile_id) => {
     let collection = await client.db("CentralBDC").collection("mojo_leads");
     let mojo_lead = await collection.findOne({ user_profile_id });
     collection = await client.db("CentralBDC").collection("leads");
-    let adf_lead = await collection.findOne({ _id: user_profile_id })
+    let adf_lead = await collection.findOne({ _id: ObjectID(user_profile_id) })
+    if (!adf_lead) {
+        console.log("no adf lead")
+        return ""
+    }
     if (!adf_lead.rules) {
         return ""
     }
@@ -746,6 +751,11 @@ app.post("/askMojo", async (req, res) => {
     }
 
 })
+// app.post("/crm", async (req, res) => {
+//     let { body } = req
+//     let x = await sendToCrm(body.id)
+//     res.send(x)
+// })
 app.listen(port, function () {
     console.log(`Example app listening on port ${port}!`);
 });
