@@ -221,6 +221,7 @@ const sendToCrm = async (user_profile_id) => {
     let updated_adf = {
         adf: {
             prospect: {
+                '@status': 'new',
                 id: {
                     '@source': "CentralBDC AiChat",
                     '#text': user_profile_id
