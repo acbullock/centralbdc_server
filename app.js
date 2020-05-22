@@ -632,10 +632,10 @@ app.post("/leadData", async function (req, res) {
     // }
     let collection = await client.db("CentralBDC").collection("leads");
     collection = await collection.insertOne(body)
-    collection = await client.db("CentralBDC").collection("leads");
-    let newItem = await collection.findOne(body)
-    let adf = await adfToMojo({ body: newItem })
-    await askMojo({ body: adf })
+    // collection = await client.db("CentralBDC").collection("leads");
+    // let newItem = await collection.findOne(body)
+    // let adf = await adfToMojo({ body: newItem })
+    // await askMojo({ body: adf })
     res.send(body)
 })
 app.post("/mojoLogin", async (req, res) => {
