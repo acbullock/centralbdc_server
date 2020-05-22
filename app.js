@@ -713,11 +713,13 @@ app.post("/engagedLead", auth, async (req, res) => {
         is_test,
         timestamp: new Date().toISOString()
     }
-    let collection = await client.db("CentralBDC").collection("mojo_leads");
     try {
-        collection.insertOne(record)
+        let collection = await client.db("CentralBDC").collection("mojo_leads");
+        let x = await collection.findOneAndUpdate({ user_profile_id }, { $set: record }, { upsert: true })
+        console.log(x, "!")
+
     } catch (error) {
-        res.status(400).send(err)
+        res.status(400).send(error)
         return;
     }
     //send email..
