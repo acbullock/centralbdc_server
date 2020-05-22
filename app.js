@@ -250,10 +250,10 @@ const sendToCrm = async (user_profile_id) => {
                 provider: {
                     name: {
                         '@part': "full",
-                        '#text': "TrueCar/American Express"
+                        '#text': "CentralBDC AiChat"
                     },
                     service: {
-                        '#text': "New TrueCar/American Express Auto Buying Customer Inquiry"
+                        '#text': "Engaged Online Shopper"
                     }
                 }
             }
