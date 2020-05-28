@@ -726,8 +726,8 @@ app.post("/engagedLead", auth, async (req, res) => {
         return;
     }
     //send email..
-    if (mojo_score !== -1)
-        await sendToCrm(user_profile_id)
+    // if (mojo_score !== -1)
+    await sendToCrm(user_profile_id)
 
     res.send(record)
 
