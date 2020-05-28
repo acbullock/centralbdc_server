@@ -213,11 +213,13 @@ const sendToCrm = async (user_profile_id) => {
     if (!adf_lead.rules) {
         return ""
     }
-    if (!adf_lead.rules.dealership) {
+    if (!mojo_lead.dealership_id) {
         return ""
     }
-    let vehicle = mojo_lead
-    let dealership = adf_lead.rules.dealership
+    let { vehicle, dealership_id } = mojo_lead
+    collection = await client.db("CentralBDC").collection("mojo_dealership_profiles");
+    const dlr_name = await collection.findOne({ _id: ObjectID(dealership_id) })
+    let { dealershipName } = dlr_name;
     let updated_adf = {
         adf: {
             prospect: {
@@ -227,7 +229,7 @@ const sendToCrm = async (user_profile_id) => {
                     '#text': user_profile_id
                 },
                 requestdate: new Date().toISOString(),
-                vehicle: mojo_lead.vehicle,
+                vehicle,
                 customer: {
                     contact: {
                         name: {
@@ -246,7 +248,7 @@ const sendToCrm = async (user_profile_id) => {
                     }
                 },
                 vendor: {
-                    vendorname: dealership
+                    vendorname: dealershipName || ""
                 },
                 provider: {
                     name: "CentralBDC AiChat",
@@ -757,11 +759,11 @@ app.post("/askMojo", async (req, res) => {
     }
 
 })
-// app.post("/crm", async (req, res) => {
-//     let { body } = req
-//     let x = await sendToCrm(body.id)
-//     res.send(x)
-// })
+app.post("/crm", async (req, res) => {
+    let { body } = req
+    let x = await sendToCrm(body.id)
+    res.send(x)
+})
 app.listen(port, function () {
     console.log(`Example app listening on port ${port}!`);
 });
