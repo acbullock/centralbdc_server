@@ -711,7 +711,7 @@ app.post("/engagedLead", auth, async (req, res) => {
         contact_time_preference,
         user_info,
         experiment,
-        dealership_id,
+        dealership_id: "centralbdc_" + dealership_id,
         transcript,
         mojo_score,
         recommended_action,
