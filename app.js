@@ -1,5 +1,13 @@
 
 const MongoClient = require('mongodb').MongoClient;
+
+const {
+    Stitch,
+    StitchCredential,
+    UserPasswordCredential,
+    UserPasswordAuthProviderClient,
+    RemoteMongoClient
+} = require("mongodb-stitch-server-sdk");
 //get env vars from heroku for local stuff..
 const uri = process.env.MONGODB_URI
 const user_id = process.env.USER_ID
@@ -18,6 +26,11 @@ var parseStringPromise = require('xml2js').parseStringPromise;
 // in sublime
 var express = require("express");
 var port = process.env.PORT || 3001;
+const stitch_client = Stitch.initializeDefaultAppClient('centralbdc-bwpmi');
+let mongodb = stitch_client.getServiceClient(
+    RemoteMongoClient.factory,
+    "mongodb-atlas"
+);
 var cors = require('cors');
 var app = express();
 const adfToMojo = async (req) => {
@@ -763,6 +776,71 @@ app.post("/crm", async (req, res) => {
     let { body } = req
     let x = await sendToCrm(body.id)
     res.send(x)
+})
+app.post("/register", async (req, res) => {
+    let { body } = req;
+    let { email, password } = body
+    const emailPasswordClient = Stitch.defaultAppClient.auth
+        .getProviderClient(UserPasswordAuthProviderClient.factory);
+    try {
+        let result = await emailPasswordClient.registerWithEmail(email, password)
+        res.send(result)
+    } catch (error) {
+        res.send(error)
+    }
+})
+app.post("/getActiveUser", async (req, res) => {
+    try {
+        res.send(mongodb.proxy.service.requestClient.activeUserAuthInfo)
+    } catch (error) {
+        res.send({ error })
+    }
+})
+app.post("/login", async (req, res) => {
+    let { body } = req;
+    let { email, password } = body
+    console.log(email, password)
+    try {
+        const credential = new UserPasswordCredential(email, password);
+        let auth = await stitch_client.auth.loginWithCredential(credential);
+        let { userId } = auth.auth.activeUserAuthInfo
+        let collection = await client.db("CentralBDC").collection("agents");
+        // // let agent = await db.collection("agents").findOne({email});
+        let agent = await collection.findOne({ email })
+        if (agent === "")
+            res.send("")
+        if (agent.userId === undefined) {
+            await collection.findOneAndUpdate({ email }, { userId })
+        }
+        res.send(auth.auth.activeUserAuthInfo);
+    } catch (error) {
+        res.send(error)
+    }
+})
+app.post("/dealer_login", async (req, res) => {
+    let { body } = req;
+    let { email, password } = body
+    console.log(email, password)
+    try {
+        const credential = new UserPasswordCredential(email, password);
+        let auth = await stitch_client.auth.loginWithCredential(credential);
+        let { userId } = auth.auth.activeUserAuthInfo
+        let collection = await client.db("CentralBDC").collection("dealership_users");
+        // // let agent = await db.collection("agents").findOne({email});
+        let agent = await collection.findOne({ email })
+        if (agent === "")
+            res.send("")
+        if (agent.userId === undefined) {
+            await collection.findOneAndUpdate({ email }, { userId })
+        }
+        res.send(auth.auth.activeUserAuthInfo);
+    } catch (error) {
+        res.send(error)
+    }
+})
+app.post("/logout", async (req, res) => {
+    let auth = await stitch_client.auth.logout();
+    res.send(auth)
 })
 app.listen(port, function () {
     console.log(`Example app listening on port ${port}!`);
