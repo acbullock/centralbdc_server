@@ -791,7 +791,8 @@ app.post("/register", async (req, res) => {
 })
 app.post("/getActiveUser", async (req, res) => {
     try {
-        res.send(mongodb.proxy.service.requestClient.activeUserAuthInfo)
+        let auth = await stitch_client.auth.activeUserAuthInfo
+        res.send(auth)
     } catch (error) {
         res.send({ error })
     }
@@ -839,8 +840,16 @@ app.post("/dealer_login", async (req, res) => {
     }
 })
 app.post("/logout", async (req, res) => {
-    let auth = await stitch_client.auth.logout();
-    res.send(auth)
+    let auth = await stitch_client.auth.activeUserAuthInfo;
+    let { userId } = auth
+
+    try {
+
+        let auth2 = await stitch_client.auth.logoutUserWithId(userId)
+        res.send(auth2)
+    } catch (error) {
+        res.send({ error })
+    }
 })
 app.listen(port, function () {
     console.log(`Example app listening on port ${port}!`);
