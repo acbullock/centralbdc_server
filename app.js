@@ -810,7 +810,7 @@ app.post("/login", async (req, res) => {
         if (agent === "")
             res.send("")
         if (agent.userId === undefined) {
-            await collection.findOneAndUpdate({ email }, { userId })
+            await collection.findOneAndUpdate({ email }, { "$set": { userId } }, { upsert: true })
         }
         res.send(auth.auth.activeUserAuthInfo);
     } catch (error) {
@@ -831,7 +831,7 @@ app.post("/dealer_login", async (req, res) => {
         if (agent === "")
             res.send("")
         if (agent.userId === undefined) {
-            await collection.findOneAndUpdate({ email }, { userId })
+            await collection.findOneAndUpdate({ email }, { "$set": { userId } }, { upsert: true })
         }
         res.send(auth.auth.activeUserAuthInfo);
     } catch (error) {
