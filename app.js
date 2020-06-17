@@ -231,6 +231,7 @@ const sendToCrm = async (user_profile_id) => {
     }
     let { vehicle, dealership_id } = mojo_lead
     collection = await client.db("CentralBDC").collection("mojo_dealership_profiles");
+    dealership_id = dealership_id.substring(dealership_id.length - 24, dealership_id.length)
     const dlr_name = await collection.findOne({ _id: ObjectID(dealership_id) })
     let { dealershipName } = dlr_name;
     let updated_adf = {
