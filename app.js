@@ -35,7 +35,7 @@ var cors = require('cors');
 var app = express();
 const adfToMojo = async (req) => {
     let { _id, rules } = req.body
-    let { adf } = rules
+    let { adf, dealership_id } = rules
     if (!_id || !adf) {
         return {}
     }
@@ -50,6 +50,7 @@ const adfToMojo = async (req) => {
     }
     let mojo_request = {
         user_profile_id: _id,
+        dealership_id
     }
     adf = result.adf
     if (!adf) {
