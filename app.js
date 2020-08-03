@@ -653,6 +653,8 @@ app.post("/leadData", async function (req, res) {
     collection = await client.db("CentralBDC").collection("leads");
     let newItem = await collection.findOne(body)
     let adf = await adfToMojo({ body: newItem })
+    let bdc_col = await client.db("CentralBDC").collection("bdc_leads")
+    await bdc_col.insertOne({...adf, processed_time: new Date().toISOString()})
     await askMojo({ body: adf })
     res.send(body)
 })
