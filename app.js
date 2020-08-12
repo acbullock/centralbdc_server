@@ -421,6 +421,7 @@ app.post('/getExtensionCallLog', async function (req, res) {
             }
             else {
                 page++;
+                await timeout(3000)
             }
         } catch (error) {
             stop = true;
