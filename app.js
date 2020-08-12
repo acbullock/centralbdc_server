@@ -395,14 +395,37 @@ const timeout = (ms) => {
     })
 }
 app.post('/getExtensionCallLog', async function (req, res) {
-    let { page, dateFrom, dateTo, extension, access_token } = req.body;
-    try {
-        let result = await axios.get(`https://platform.ringcentral.com/restapi/v1.0/account/~/extension/${extension}/call-log?access_token=${access_token}&page=${page}&perPage=1000&dateFrom=${dateFrom}&dateTo=${dateTo}`)
-        res.send(result.data)
-    } catch (error) {
-        res.send(error.message)
+    let { dateFrom, dateTo, extension, access_token } = req.body;
+    let TOKENS = [
+        "5e583450576f3ada786de3c2",
+        "5e5835a4576f3ada786de3c3",
+        "5e617c79ffa244127dd79adc",
+        "5ef39198c1c0762bb2871ddd",
+        "5ef392bec1c0762bb2871dde",
+        "5ef3938bc1c0762bb2871ddf"
+    ]
+    let page = 1;
+    let stop = false
+    let recs = []
+    while (stop !== true) {
+        try {
+            let token = await client.db("CentralBDC").collection("utils");
+            token = await token.findOne({ _id: new ObjectID(TOKENS[page % TOKENS.length]) })
+            let curr = await axios.get(`https://platform.ringcentral.com/restapi/v1.0/account/~/extension/${extension}/call-log?access_token=${access_token}&page=${page}&perPage=1000&dateFrom=${dateFrom}&dateTo=${dateTo}`)
+            curr = curr.data;
+            recs = recs.concat(curr.records)
+            if (curr.records.length !== 1000) {
+                stop = true;
+            }
+            else {
+                page++;
+            }
+        } catch (error) {
+            stop = true;
+            res.status(500).send(error.message)
+        }
     }
-    
+    res.send(recs)
 })
 app.post('/findOne', async function (req, res) {
     let query = req.body.query || {}
