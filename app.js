@@ -394,8 +394,52 @@ const timeout = (ms) => {
         }, ms);
     })
 }
+app.post('/getExtensionCallLogMTD', async function (req, res) {
+    let { extension } = req.body;
+    let TOKENS = [
+        "5e583450576f3ada786de3c2",
+        "5e5835a4576f3ada786de3c3",
+        "5e617c79ffa244127dd79adc",
+        "5ef39198c1c0762bb2871ddd",
+        "5ef392bec1c0762bb2871dde",
+        "5ef3938bc1c0762bb2871ddf"
+    ]
+    let page = 1;
+    let stop = false
+    let recs = []
+    while (stop !== true) {
+        try {
+            let token = await client.db("CentralBDC").collection("utils");
+            token = await token.findOne({ _id: new ObjectID(TOKENS[Math.floor(Math.random() * TOKENS.length)]) })
+            token = token.voice_token
+            console.log(new Date(new Date(new Date().setDate(1)).setHours(0, 0, 0, 0)).toISOString())
+            let curr = await axios.get(`https://platform.ringcentral.com/restapi/v1.0/account/~/extension/${extension}/call-log?access_token=${token}&page=${page}&perPage=1000&dateFrom=${new Date(new Date(new Date().setHours(0, 0, 0, 0)).setDate(1)).toISOString()}&dateTo=${new Date().toISOString()}`)
+            curr = curr.data;
+            recs = recs.concat(curr.records)
+            if (curr.records.length !== 1000) {
+                stop = true;
+            }
+            else {
+                page++;
+                await timeout(3000)
+            }
+        } catch (error) {
+            stop = true;
+            res.status(500).send(error)
+        }
+    }
+    let outbound = recs.filter(r => { return r.direction === "Outbound" })
+    let inbound = recs.filter(r => { return r.direction === "Inbound" && r.result === "Accepted" })
+    console.log("\tinbound", inbound.length)
+    console.log("\toutbound", outbound.length)
+    let collection = await client.db("CentralBDC").collection("agents");
+    collection = collection.findOneAndUpdate({ extension }, { "$set": { inboundMTD: inbound.length, outboundMTD: outbound.length, mtdCallCountLastUpdated: new Date() } }, { upsert: true }).catch((err) => console.log(err))
+
+
+    res.send(recs)
+})
 app.post('/getExtensionCallLog', async function (req, res) {
-    let {  extension } = req.body;
+    let { extension } = req.body;
     let TOKENS = [
         "5e583450576f3ada786de3c2",
         "5e5835a4576f3ada786de3c3",
