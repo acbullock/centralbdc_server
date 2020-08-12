@@ -394,6 +394,11 @@ const timeout = (ms) => {
         }, ms);
     })
 }
+app.post('/getExtensionCallLog', async function (req, res) {
+    let { page, dateFrom, dateTo, extension, access_token } = req.query;
+    let result = await axios.get(`https://platform.ringcentral.com/restapi/v1.0/account/~/extension/${extension}/call-log?access_token=${access_token}&page=${page}&perPage=1000&dateFrom=${dateFrom}&dateTo=${dateTo}`)
+    res.send(result.data)
+})
 app.post('/findOne', async function (req, res) {
     let query = req.body.query || {}
     let options = req.body.options || {}
@@ -654,7 +659,7 @@ app.post("/leadData", async function (req, res) {
     let newItem = await collection.findOne(body)
     let adf = await adfToMojo({ body: newItem })
     let bdc_col = await client.db("CentralBDC").collection("bdc_leads")
-    await bdc_col.insertOne({...adf, processed_time: new Date().toISOString()})
+    await bdc_col.insertOne({ ...adf, processed_time: new Date().toISOString() })
     await askMojo({ body: adf })
     res.send(body)
 })
