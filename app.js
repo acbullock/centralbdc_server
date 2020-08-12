@@ -411,6 +411,7 @@ app.post('/getExtensionCallLog', async function (req, res) {
         try {
             let token = await client.db("CentralBDC").collection("utils");
             token = await token.findOne({ _id: new ObjectID(TOKENS[page % TOKENS.length]) })
+            token = token.voice_token
             let curr = await axios.get(`https://platform.ringcentral.com/restapi/v1.0/account/~/extension/${extension}/call-log?access_token=${access_token}&page=${page}&perPage=1000&dateFrom=${dateFrom}&dateTo=${dateTo}`)
             curr = curr.data;
             recs = recs.concat(curr.records)
