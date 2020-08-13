@@ -394,6 +394,83 @@ const timeout = (ms) => {
         }, ms);
     })
 }
+app.get('/personalRecord', async function (req, res) {
+    try {
+        let { id } = req.query
+        let agents = await client.db("CentralBDC").collection("agents")
+        let agent = await agents.findOne({ _id: new ObjectID(id) })
+        let query = agent.department === "sales" ? "$ne" : "$eq"
+        console.log(agent.name)
+        let pipe = [{
+            "$project": {
+                "_id": 1,
+                "agent_id": 1,
+                "verified": 1,
+                "parts": {
+                    "$dateToParts": {
+                        "date": {
+                            "$dateFromString": {
+                                "dateString": { "$substrCP": ["$verified", 0, 23] },
+                                "timezone": "+0500"
+                            }
+                        }
+                    }
+                },
+                "day": {
+                    "$dayOfWeek": {
+                        "$dateFromString": {
+                            "dateString": { "$substrCP": ["$verified", 0, 23] },
+                            "timezone": "+0500"
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "$match": {
+                "agent_id": id,
+                "dealership_department": { [query]: "Service" }
+            }
+        },
+        {
+            "$group": {
+                "_id": {
+                    "month": "$parts.month",
+                    "day": "$parts.day",
+                    "year": "$parts.year",
+                    "dayOfWeek": "$day"
+                },
+                "count": {
+                    "$sum": 1
+                }
+            }
+        },
+        {
+            "$sort": {
+                "count": -1
+            }
+        }]
+        let all_apps = await client.db("CentralBDC").collection("all_appointments")
+
+        let history = await all_apps.aggregate(pipe).toArray()
+        let booksmax = 0;
+        console.log("max in books", history[0] && history[0].count || 0)
+        console.log("personal record", agent.personalRecord)
+        if (!history[0]) {
+            booksmax = 0
+        }
+        else {
+            booksmax = history[0].count
+        }
+        if (booksmax > agent.personalRecord) {
+            console.log("new record for ", agent.name)
+            await agents.findOneAndUpdate({ _id: new ObjectID(id) }, { "$set": { personalRecord: booksmax } }, { upsert: true })
+        }
+        res.send({ history })
+    } catch (error) {
+        res.status(400).send(error.message)
+    }
+})
 app.post('/getExtensionCallLogMTD', async function (req, res) {
     let { extension } = req.body;
     let TOKENS = [
