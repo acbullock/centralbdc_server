@@ -247,9 +247,14 @@ const sendToCrm = async (user_profile_id) => {
                 vehicle,
                 customer: {
                     contact: {
-                        name: {
+                        name: [{
+                            '@part': 'first',
                             '#text': mojo_lead.first_name || ""
                         },
+                        {
+                            '@part': 'last',
+                            '#text': mojo_lead.last_name || ""
+                        }],
                         email: {
                             '#text': mojo_lead.email || ""
                         },
@@ -276,7 +281,6 @@ const sendToCrm = async (user_profile_id) => {
 
     }
     var xmls = builder.create(updated_adf).end({ pretty: true });
-
     try {
         let email = await axios.post("https://api.emailjs.com/api/v1.0/email/send", {
             service_id,
