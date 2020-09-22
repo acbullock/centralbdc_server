@@ -91,6 +91,7 @@ const sendUsedEmail = async ({
     customer_first_name,
     dealership_name,
     dealership_address,
+    model
 }) => {
     try {
         let email = await axios.post("https://api.emailjs.com/api/v1.0/email/send", {
@@ -103,6 +104,7 @@ const sendUsedEmail = async ({
                 customer_first_name,
                 dealership_name,
                 dealership_address,
+                model
             }
         })
         email = email.data;
@@ -946,6 +948,9 @@ app.post("/leadData", async function (req, res) {
     let dlrCollection = await client.db("CentralBDC").collection("mojo_dealership_profiles");
     let dlr = await dlrCollection.findOne({ _id: new ObjectID(adf.dealership_id.substring(11)) })
     console.log(adf)
+    let bdc_col = await client.db("CentralBDC").collection("bdc_leads")
+    await bdc_col.insertOne({ ...adf, processed_time: new Date().toISOString() })
+    await askMojo({ body: adf })
     if (adf.phone_number === "" || !adf.phone_number) {
         await sendNoPhoneEmail({
             //to_email: adf.email
@@ -955,7 +960,7 @@ app.post("/leadData", async function (req, res) {
             customer_first_name: adf.first_name,
             dealership_name: dlr.dealershipName,
             dealership_address: dlr.dealershipAddress
-        });
+        })
     }
     else if (adf.interest === "sell" || adf.interest === "trade-in") {
         await sendTradeEmail({
@@ -976,7 +981,8 @@ app.post("/leadData", async function (req, res) {
             reply_to: "centralbdcautomotivecustomer@centralbdc.com",
             customer_first_name: adf.first_name,
             dealership_name: dlr.dealershipName,
-            dealership_address: dlr.dealershipAddress
+            dealership_address: dlr.dealershipAddress,
+            model: adf.vehicle && adf.vehicle.model
         })
     }
     else if ((adf.interest === "buy" || adf.interest === "lease") && adf.status === "new") {
@@ -990,9 +996,6 @@ app.post("/leadData", async function (req, res) {
             dealership_address: dlr.dealershipAddress
         })
     }
-    let bdc_col = await client.db("CentralBDC").collection("bdc_leads")
-    await bdc_col.insertOne({ ...adf, processed_time: new Date().toISOString() })
-    await askMojo({ body: adf })
     res.send(body)
 })
 app.post("/mojoLogin", async (req, res) => {
