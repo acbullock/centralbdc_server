@@ -33,6 +33,110 @@ let mongodb = stitch_client.getServiceClient(
 );
 var cors = require('cors');
 var app = express();
+const sendNewEmail = async ({
+    to_email,
+    reply_to,
+    customer_first_name,
+    dealership_name,
+    dealership_address,
+}) => {
+    try {
+        let email = await axios.post("https://api.emailjs.com/api/v1.0/email/send", {
+            service_id,
+            template_id: "template_sto3x2p",
+            user_id,
+            template_params: {
+                to_email,
+                reply_to,
+                customer_first_name,
+                dealership_name,
+                dealership_address,
+            }
+        })
+        email = email.data;
+        return email
+    } catch (error) {
+        return error
+    }
+}
+const sendNoPhoneEmail = async ({
+    to_email,
+    reply_to,
+    customer_first_name,
+    dealership_name,
+    dealership_address,
+}) => {
+    try {
+        let email = await axios.post("https://api.emailjs.com/api/v1.0/email/send", {
+            service_id,
+            template_id: "template_601ej5q",
+            user_id,
+            template_params: {
+                to_email,
+                reply_to,
+                customer_first_name,
+                dealership_name,
+                dealership_address,
+            }
+        })
+        email = email.data;
+        return email
+    } catch (error) {
+        return error
+    }
+}
+const sendUsedEmail = async ({
+    to_email,
+    reply_to,
+    customer_first_name,
+    dealership_name,
+    dealership_address,
+}) => {
+    try {
+        let email = await axios.post("https://api.emailjs.com/api/v1.0/email/send", {
+            service_id,
+            template_id: "template_oco1i8e",
+            user_id,
+            template_params: {
+                to_email,
+                reply_to,
+                customer_first_name,
+                dealership_name,
+                dealership_address,
+            }
+        })
+        email = email.data;
+        return email
+    } catch (error) {
+        return error
+    }
+}
+const sendTradeEmail = async ({
+    to_email,
+    reply_to,
+    customer_first_name,
+    dealership_name,
+    dealership_address,
+}) => {
+    try {
+        let email = await axios.post("https://api.emailjs.com/api/v1.0/email/send", {
+            service_id,
+            template_id: "template_dymkvjg",
+            user_id,
+            template_params: {
+                to_email,
+                reply_to,
+                customer_first_name,
+                dealership_name,
+                dealership_address,
+            }
+        })
+        email = email.data;
+        return email
+    } catch (error) {
+        return error
+    }
+}
 const adfToMojo = async (req) => {
     let { _id, rules } = req.body
     let { adf, dealership_id } = rules
@@ -65,8 +169,37 @@ const adfToMojo = async (req) => {
     let vehicle = getValue(prospect.vehicle)
     let customer = getValue(prospect.customer)
     let provider = getValue(prospect.provider)
+    if (!customer) {
+        console.log("no customer in prospect")
+    }
+    else {
+        let contact = getValue(customer.contact)
+        let comments = getValue(customer.comments)
+        if (!contact) {
+            console.log("no contact in prospect.customer")
+        }
+        else {
+            let email = getValue(contact.email)
+            let phone = getValue(contact.phone)
+            let address = getValue(contact.address)
+            let name = getName(contact.name)
+            let postal = getValue(address.postalcode)
+            typeof email === "string" && email.length > 0 ? mojo_request.email = email : mojo_request = mojo_request
+            typeof phone === "string" && phone.length > 0 ? mojo_request.phone_number = phone : mojo_request = mojo_request
+            mojo_request.first_name = name.first
+            mojo_request.last_name = name.last
+            mojo_request.postal_code = postal
+            mojo_request.adf_prospect_comments = comments
+        }
+    }
     if (!vehicle) {
         console.log("no vehicle in prospect")
+    }
+    if (vehicle && vehicle.$ && vehicle.$.interest) {
+        mojo_request.interest = vehicle.$.interest
+    }
+    if (vehicle && vehicle.$ && vehicle.$.status) {
+        mojo_request.status = vehicle.$.status
     }
     //see if trade in estimate..
     if (vehicle.$ ? vehicle.$.interest === "trade-in" : false) {
@@ -164,29 +297,7 @@ const adfToMojo = async (req) => {
 
     }
 
-    if (!customer) {
-        console.log("no customer in prospect")
-    }
-    else {
-        let contact = getValue(customer.contact)
-        let comments = getValue(customer.comments)
-        if (!contact) {
-            console.log("no contact in prospect.customer")
-        }
-        else {
-            let email = getValue(contact.email)
-            let phone = getValue(contact.phone)
-            let address = getValue(contact.address)
-            let name = getName(contact.name)
-            let postal = getValue(address.postalcode)
-            typeof email === "string" && email.length > 0 ? mojo_request.email = email : mojo_request = mojo_request
-            typeof phone === "string" && phone.length > 0 ? mojo_request.phone_number = phone : mojo_request = mojo_request
-            mojo_request.first_name = name.first
-            mojo_request.last_name = name.last
-            mojo_request.postal_code = postal
-            mojo_request.adf_prospect_comments = comments
-        }
-    }
+
     if (!provider) {
         console.log("no provider in prospect")
 
@@ -832,6 +943,53 @@ app.post("/leadData", async function (req, res) {
     collection = await client.db("CentralBDC").collection("leads");
     let newItem = await collection.findOne(body)
     let adf = await adfToMojo({ body: newItem })
+    let dlrCollection = await client.db("CentralBDC").collection("mojo_dealership_profiles");
+    let dlr = await dlrCollection.findOne({ _id: new ObjectID(adf.dealership_id.substring(11)) })
+    console.log(adf)
+    if (adf.phone_number === "" || !adf.phone_number) {
+        await sendNoPhoneEmail({
+            //to_email: adf.email
+            to_email: "abullock@centralbdc.com",
+            //reply_to: dealer
+            reply_to: "centralbdcautomotivecustomer@centralbdc.com",
+            customer_first_name: adf.first_name,
+            dealership_name: dlr.dealershipName,
+            dealership_address: dlr.dealershipAddress
+        });
+    }
+    else if (adf.interest === "sell" || adf.interest === "trade-in") {
+        await sendTradeEmail({
+            //to_email: adf.email
+            to_email: "abullock@centralbdc.com",
+            //reply_to: dealer
+            reply_to: "centralbdcautomotivecustomer@centralbdc.com",
+            customer_first_name: adf.first_name,
+            dealership_name: dlr.dealershipName,
+            dealership_address: dlr.dealershipAddress
+        })
+    }
+    else if ((adf.interest === "buy" || adf.interest === "lease") && adf.status === "used") {
+        await sendUsedEmail({
+            //to_email: adf.email
+            to_email: "abullock@centralbdc.com",
+            //reply_to: dealer
+            reply_to: "centralbdcautomotivecustomer@centralbdc.com",
+            customer_first_name: adf.first_name,
+            dealership_name: dlr.dealershipName,
+            dealership_address: dlr.dealershipAddress
+        })
+    }
+    else if ((adf.interest === "buy" || adf.interest === "lease") && adf.status === "new") {
+        await sendNewEmail({
+            //to_email: adf.email
+            to_email: "abullock@centralbdc.com",
+            //reply_to: dealer
+            reply_to: "centralbdcautomotivecustomer@centralbdc.com",
+            customer_first_name: adf.first_name,
+            dealership_name: dlr.dealershipName,
+            dealership_address: dlr.dealershipAddress
+        })
+    }
     let bdc_col = await client.db("CentralBDC").collection("bdc_leads")
     await bdc_col.insertOne({ ...adf, processed_time: new Date().toISOString() })
     await askMojo({ body: adf })
