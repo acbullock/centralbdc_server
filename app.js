@@ -40,8 +40,8 @@ sendEmailTemplate = async ({
 }) => {
     try {
         let email = await axios.post("https://api.emailjs.com/api/v1.0/email/send", {
-            service,
-            template,
+            service_id: service,
+            template_id: template,
             user_id,
             template_params
         })
