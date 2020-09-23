@@ -906,7 +906,8 @@ app.post("/leadData", async function (req, res) {
             }
         })
     }
-    else if ((adf.interest === "buy" || adf.interest === "lease") && adf.status === "new") {
+    else {
+        // else if ((adf.interest === "buy" || adf.interest === "lease") && adf.status === "new") {
         await sendEmailTemplate({
             service: dlr.service_id || "service_v1cojz5",
             template: "template_sto3x2p",
