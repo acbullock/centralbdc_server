@@ -33,105 +33,17 @@ let mongodb = stitch_client.getServiceClient(
 );
 var cors = require('cors');
 var app = express();
-const sendNewEmail = async ({
-    to_email,
-    reply_to,
-    customer_first_name,
-    dealership_name,
-    dealership_address,
+sendEmailTemplate = async ({
+    service,
+    template,
+    template_params
 }) => {
     try {
         let email = await axios.post("https://api.emailjs.com/api/v1.0/email/send", {
-            service_id,
-            template_id: "template_sto3x2p",
+            service,
+            template,
             user_id,
-            template_params: {
-                to_email,
-                reply_to,
-                customer_first_name,
-                dealership_name,
-                dealership_address,
-            }
-        })
-        email = email.data;
-        return email
-    } catch (error) {
-        return error
-    }
-}
-const sendNoPhoneEmail = async ({
-    to_email,
-    reply_to,
-    customer_first_name,
-    dealership_name,
-    dealership_address,
-}) => {
-    try {
-        let email = await axios.post("https://api.emailjs.com/api/v1.0/email/send", {
-            service_id,
-            template_id: "template_601ej5q",
-            user_id,
-            template_params: {
-                to_email,
-                reply_to,
-                customer_first_name,
-                dealership_name,
-                dealership_address,
-            }
-        })
-        email = email.data;
-        return email
-    } catch (error) {
-        return error
-    }
-}
-const sendUsedEmail = async ({
-    to_email,
-    reply_to,
-    customer_first_name,
-    dealership_name,
-    dealership_address,
-    model
-}) => {
-    try {
-        let email = await axios.post("https://api.emailjs.com/api/v1.0/email/send", {
-            service_id,
-            template_id: "template_oco1i8e",
-            user_id,
-            template_params: {
-                to_email,
-                reply_to,
-                customer_first_name,
-                dealership_name,
-                dealership_address,
-                model
-            }
-        })
-        email = email.data;
-        return email
-    } catch (error) {
-        return error
-    }
-}
-const sendTradeEmail = async ({
-    to_email,
-    reply_to,
-    customer_first_name,
-    dealership_name,
-    dealership_address,
-}) => {
-    try {
-        let email = await axios.post("https://api.emailjs.com/api/v1.0/email/send", {
-            service_id,
-            template_id: "template_dymkvjg",
-            user_id,
-            template_params: {
-                to_email,
-                reply_to,
-                customer_first_name,
-                dealership_name,
-                dealership_address,
-            }
+            template_params
         })
         email = email.data;
         return email
@@ -952,48 +864,60 @@ app.post("/leadData", async function (req, res) {
     await bdc_col.insertOne({ ...adf, processed_time: new Date().toISOString() })
     await askMojo({ body: adf })
     if (adf.phone_number === "" || !adf.phone_number) {
-        await sendNoPhoneEmail({
-            //to_email: adf.email
-            to_email: "abullock@centralbdc.com",
-            //reply_to: dealer
-            reply_to: "centralbdcautomotivecustomer@centralbdc.com",
-            customer_first_name: adf.first_name,
-            dealership_name: dlr.dealershipName,
-            dealership_address: dlr.dealershipAddress
+        await sendEmailTemplate({
+            service: dlr.service_id || "service_v1cojz5",
+            template: "template_601ej5q",
+            template_params: {
+                // to_email: adf.email || "abullock@centralbdc.com",
+                to_email: "abullock@centralbdc.com",
+                reply_to: dlr.dealershipEmailAddress || "centralbdcautomotivecustomer@centralbdc.com",
+                customer_first_name: adf.first_name,
+                dealership_name: dlr.dealershipName,
+                dealership_address: dlr.dealershipAddress,
+            }
         })
     }
     else if (adf.interest === "sell" || adf.interest === "trade-in") {
-        await sendTradeEmail({
-            //to_email: adf.email
-            to_email: "abullock@centralbdc.com",
-            //reply_to: dealer
-            reply_to: "centralbdcautomotivecustomer@centralbdc.com",
-            customer_first_name: adf.first_name,
-            dealership_name: dlr.dealershipName,
-            dealership_address: dlr.dealershipAddress
+        await sendEmailTemplate({
+            service: dlr.service_id || "service_v1cojz5",
+            template: "template_dymkvjg",
+            template_params: {
+                // to_email: adf.email || "abullock@centralbdc.com",
+                to_email: "abullock@centralbdc.com",
+                reply_to: dlr.dealershipEmailAddress || "centralbdcautomotivecustomer@centralbdc.com",
+                customer_first_name: adf.first_name,
+                dealership_name: dlr.dealershipName,
+                dealership_address: dlr.dealershipAddress,
+            }
         })
     }
     else if ((adf.interest === "buy" || adf.interest === "lease") && adf.status === "used") {
-        await sendUsedEmail({
-            //to_email: adf.email
-            to_email: "abullock@centralbdc.com",
-            //reply_to: dealer
-            reply_to: "centralbdcautomotivecustomer@centralbdc.com",
-            customer_first_name: adf.first_name,
-            dealership_name: dlr.dealershipName,
-            dealership_address: dlr.dealershipAddress,
-            model: adf.vehicle && adf.vehicle.model
+        await sendEmailTemplate({
+            service: dlr.service_id || "service_v1cojz5",
+            template: "template_oco1i8e",
+            template_params: {
+                // to_email: adf.email || "abullock@centralbdc.com",
+                to_email: "abullock@centralbdc.com",
+                reply_to: dlr.dealershipEmailAddress || "centralbdcautomotivecustomer@centralbdc.com",
+                customer_first_name: adf.first_name,
+                dealership_name: dlr.dealershipName,
+                dealership_address: dlr.dealershipAddress,
+                model: adf.vehicle && adf.vehicle.model || "vehicle"
+            }
         })
     }
     else if ((adf.interest === "buy" || adf.interest === "lease") && adf.status === "new") {
-        await sendNewEmail({
-            //to_email: adf.email
-            to_email: "abullock@centralbdc.com",
-            //reply_to: dealer
-            reply_to: "centralbdcautomotivecustomer@centralbdc.com",
-            customer_first_name: adf.first_name,
-            dealership_name: dlr.dealershipName,
-            dealership_address: dlr.dealershipAddress
+        await sendEmailTemplate({
+            service: dlr.service_id || "service_v1cojz5",
+            template: "template_sto3x2p",
+            template_params: {
+                // to_email: adf.email || "abullock@centralbdc.com",
+                to_email: "abullock@centralbdc.com",
+                reply_to: dlr.dealershipEmailAddress || "centralbdcautomotivecustomer@centralbdc.com",
+                customer_first_name: adf.first_name,
+                dealership_name: dlr.dealershipName,
+                dealership_address: dlr.dealershipAddress
+            }
         })
     }
     res.send(body)
