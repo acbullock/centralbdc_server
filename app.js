@@ -218,7 +218,7 @@ const adfToMojo = async (req) => {
     }
     else {
         let name = getValue(provider.name)
-        if (name.toLowercase().indexOf("apollo text") !== -1) return {}
+        if (name.toLowerCase().indexOf("apollo text") !== -1) return {}
         mojo_request.origin = {
             vendor_id: name,
             vendor_name: name
