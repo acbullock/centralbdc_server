@@ -849,6 +849,7 @@ app.get("/updateRecordsLastMonth", async function (req, res) {
     res.send({ result: "done" })
 })
 app.post("/leadData", async function (req, res) {
+    console.log(req)
     let { body } = req
     // for(let b in body.rules){
     //     body.rules[b] = body.rules[b].trim();
